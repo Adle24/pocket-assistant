@@ -9,10 +9,12 @@ import {
   View,
 } from "react-native";
 
+import { firestore } from "@/config/frebaseConfig";
 import { useAuth, useSSO, useUser } from "@clerk/clerk-expo";
 import * as AuthSession from "expo-auth-session";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import { doc, setDoc } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
 
 export const useWarmUpBrowser = () => {
@@ -56,6 +58,15 @@ export default function Index() {
           strategy: "oauth_google",
           redirectUrl: AuthSession.makeRedirectUri(),
         });
+
+      if (signUp) {
+        await setDoc(doc(firestore, "users", signUp.emailAddress ?? ""), {
+          email: signUp.emailAddress,
+          name: signUp.firstName + " " + signUp.lastName,
+          joinedDate: Date.now(),
+          credits: 20,
+        });
+      }
 
       if (createdSessionId) {
         setActive!({
