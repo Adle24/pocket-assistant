@@ -1,5 +1,6 @@
 import Colors from "@/shared/Colors";
 import {
+  ActivityIndicator,
   Dimensions,
   Image,
   Platform,
@@ -8,7 +9,74 @@ import {
   View,
 } from "react-native";
 
+import { useAuth, useSSO, useUser } from "@clerk/clerk-expo";
+import * as AuthSession from "expo-auth-session";
+import { useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
+import { useCallback, useEffect, useState } from "react";
+
+export const useWarmUpBrowser = () => {
+  useEffect(() => {
+    // Preloads the browser for Android devices to reduce authentication load time
+    // See: https://docs.expo.dev/guides/authentication/#improving-user-experience
+    void WebBrowser.warmUpAsync();
+    return () => {
+      // Cleanup: closes browser when component unmounts
+      void WebBrowser.coolDownAsync();
+    };
+  }, []);
+};
+
+WebBrowser.maybeCompleteAuthSession();
+
 export default function Index() {
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isSignedIn) {
+      // Redirect to home Screen
+    }
+
+    if (isSignedIn != undefined) {
+      setLoading(false);
+    }
+  }, [isSignedIn]);
+
+  useWarmUpBrowser();
+
+  const { startSSOFlow } = useSSO();
+
+  const onLoginPress = useCallback(async () => {
+    try {
+      const { createdSessionId, setActive, signIn, signUp } =
+        await startSSOFlow({
+          strategy: "oauth_google",
+          redirectUrl: AuthSession.makeRedirectUri(),
+        });
+
+      if (createdSessionId) {
+        setActive!({
+          session: createdSessionId,
+          navigate: async ({ session }) => {
+            if (session?.currentTask) {
+              console.log(session?.currentTask);
+              return;
+            }
+
+            router.push("/");
+          },
+        });
+      } else {
+        console.log("Not created");
+      }
+    } catch (err) {
+      console.error(JSON.stringify(err, null, 2));
+    }
+  }, []);
+
   return (
     <View
       style={{
@@ -50,25 +118,29 @@ export default function Index() {
           Completely Free!
         </Text>
       </View>
-      <TouchableOpacity
-        style={{
-          width: "100%",
-          padding: 15,
-          backgroundColor: Colors.PRIMARY,
-          borderRadius: 12,
-          marginTop: 50,
-        }}
-      >
-        <Text
+      {!loading && (
+        <TouchableOpacity
           style={{
-            color: Colors.WHITE,
-            textAlign: "center",
-            fontSize: 16,
+            width: "100%",
+            padding: 15,
+            backgroundColor: Colors.PRIMARY,
+            borderRadius: 12,
+            marginTop: 50,
           }}
+          onPress={onLoginPress}
         >
-          Get Started
-        </Text>
-      </TouchableOpacity>
+          <Text
+            style={{
+              color: Colors.WHITE,
+              textAlign: "center",
+              fontSize: 16,
+            }}
+          >
+            Get Started
+          </Text>
+        </TouchableOpacity>
+      )}
+      {loading == undefined && <ActivityIndicator size={"large"} />}
     </View>
   );
 }
