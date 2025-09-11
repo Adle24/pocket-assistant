@@ -1,6 +1,7 @@
 import Colors from "@/shared/Colors";
+import { useRouter } from "expo-router";
 import React from "react";
-import { Image, Text, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 type Props = {
   agent: Agent;
@@ -16,15 +17,29 @@ type Agent = {
   featured?: boolean;
 };
 
+//@ts-ignore
 export default function AgentCard({ agent }: Props) {
+  const router = useRouter();
+
   return (
-    <View
+    <TouchableOpacity
       style={{
         backgroundColor: Colors.WHITE,
         borderRadius: 15,
         minHeight: 200,
         overflow: "hidden",
       }}
+      onPress={() =>
+        router.push({
+          pathname: "/chat",
+          params: {
+            agentId: agent.id,
+            agentName: agent.name,
+            initialText: agent.initialText,
+            agentPrompt: agent.prompt,
+          },
+        })
+      }
     >
       <View
         style={{
@@ -61,6 +76,6 @@ export default function AgentCard({ agent }: Props) {
           style={{ width: 120, height: 120, resizeMode: "contain" }}
         />
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
