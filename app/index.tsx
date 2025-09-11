@@ -98,7 +98,7 @@ export default function Index() {
       }}
     >
       <Image
-        source={require("./../assets/images/logo.jpg")}
+        source={require("./../assets/images/robot.png")}
         style={{
           width: Dimensions.get("screen").width * 0.85,
           height: 200,

@@ -1,8 +1,10 @@
+import AgentBanner from "@/components/Home/AgentBanner";
+import Agents from "@/components/Home/Agents";
 import Colors from "@/shared/Colors";
 import { useNavigation } from "expo-router";
 import { SettingsIcon } from "lucide-react-native";
 import React, { useEffect } from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Image, Text, TouchableOpacity, View } from "react-native";
 
 export default function Home() {
   const navigation = useNavigation();
@@ -45,8 +47,20 @@ export default function Home() {
     });
   }, []);
   return (
-    <View>
-      <Text>Home</Text>
-    </View>
+    <FlatList
+      data={[]}
+      renderItem={null}
+      ListHeaderComponent={
+        <View
+          style={{
+            padding: 15,
+          }}
+        >
+          <Agents isFeatured={true} />
+          <AgentBanner />
+          <Agents isFeatured={false} />
+        </View>
+      }
+    />
   );
 }
