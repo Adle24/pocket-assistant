@@ -82,6 +82,7 @@ export default function Index() {
         });
       } else {
         console.log("Not created");
+        console.log("MMMMM");
       }
     } catch (err) {
       console.error(JSON.stringify(err, null, 2));
