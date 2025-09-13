@@ -1,7 +1,11 @@
+import { firestore } from "@/config/frebaseConfig";
 import Colors from "@/shared/Colors";
+import { useUser } from "@clerk/clerk-expo";
 import { useNavigation } from "expo-router";
+import { doc, setDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   StyleSheet,
   Text,
   TextInput,
@@ -12,8 +16,11 @@ import EmojiSelector from "react-native-emoji-selector";
 
 export default function CreateAgent() {
   const navigation = useNavigation();
+  const { user } = useUser();
 
   const [emoji, setEmoji] = useState("🤖");
+  const [agentName, setAgentName] = useState<string>();
+  const [instruction, setInstruction] = useState<string>();
 
   useEffect(() => {
     navigation.setOptions({
@@ -21,6 +28,32 @@ export default function CreateAgent() {
       headerTitle: "Create Agent",
     });
   }, []);
+
+  const createNewAgent = async () => {
+    if (!agentName || !emoji || !instruction) {
+      Alert.alert("Please enter all details");
+      return;
+    }
+
+    const agentId = Date.now().toExponential.toString();
+    await setDoc(doc(firestore, "agents", agentId), {
+      emoji: emoji,
+      agentName: agentName,
+      agentId: agentId,
+      prompt: instruction,
+      userEmail: user?.primaryEmailAddress?.emailAddress,
+    });
+
+    // router.push({
+    //   pathname: "/chat",
+    //   params: {
+    //     agentId: agentId,
+    //     agentName: agentName,
+    //     initialText: "",
+    //     agentPrompt: instruction,
+    //   },
+    // });
+  };
 
   return (
     <View
@@ -50,7 +83,11 @@ export default function CreateAgent() {
       </View>
       <View>
         <Text>Agent Name</Text>
-        <TextInput placeholder="Agent Name" style={styles.input} />
+        <TextInput
+          placeholder="Agent Name"
+          style={styles.input}
+          onChangeText={(v) => setAgentName(v)}
+        />
       </View>
       <View
         style={{
@@ -62,6 +99,7 @@ export default function CreateAgent() {
           placeholder="Agent Instruction"
           style={[styles.input, { height: 200, textAlignVertical: "top" }]}
           multiline={true}
+          onChangeText={(v) => setInstruction(v)}
         />
       </View>
       <TouchableOpacity
@@ -71,6 +109,7 @@ export default function CreateAgent() {
           marginTop: 20,
           borderRadius: 15,
         }}
+        onPress={createNewAgent}
       >
         <Text
           style={{
